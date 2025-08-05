@@ -53,6 +53,7 @@
 		default-brightness-level = <255>;
 	};
 
+#if 0
 	panel: panel {
 		compatible = "simple-panel";
 		status = "okay";
@@ -87,6 +88,7 @@
 			};
 		};
 	};
+#endif
 
 	reserved_memory: reserved-memory {
 		status = "okay";
@@ -398,6 +400,7 @@
 };
 
 /**************************** LCD/TP ******************************/
+#if 0
 &pwm1 {
 	status = "okay";
 	pinctrl-names = "active";
@@ -454,6 +457,7 @@
 		pinctrl-names = "default";
 	};
 };
+#endif
 
 /**************************** PINCTRL ******************************/
 // SPI
@@ -475,11 +479,13 @@
 &i2c2 {
 	pinctrl-0 = <&i2c2m0_xfer>;
 };
+#if 0
 &i2c3 {
 	pinctrl-names = "default", "config";
 	pinctrl-0 = <&i2c3m2_xfer &tp_rst &tp_irq>;
 	pinctrl-1 = <&i2c3m0_xfer &i2c3m1_xfer>;
 };
+#endif
 &i2c4 {
 	pinctrl-names = "default", "config";
 	pinctrl-0 = <&i2c4m2_xfer>;
@@ -507,15 +513,19 @@
 &pwm0 {
 	pinctrl-0 = <&pwm0m1_pins>;
 };
+#if 0
 &pwm2 {
 	pinctrl-0 = <&pwm2m1_pins &pwm2m2_pins>;
 };
+#endif
 &pwm3 {
 	pinctrl-0 = <&pwm3m1_pins &pwm3m2_pins>;
 };
+#if 0
 &pwm4 {
 	pinctrl-0 = <&pwm4m0_pins &pwm4m1_pins &pwm4m2_pins>;
 };
+#endif
 &pwm5 {
 	pinctrl-0 = <&pwm5m1_pins &pwm5m2_pins>;
 };
@@ -531,9 +541,11 @@
 &pwm9 {
 	pinctrl-0 = <&pwm9m1_pins>;
 };
+#if 0
 &pwm10 {
 	pinctrl-0 = <&pwm10m1_pins &pwm10m2_pins>;
 };
+#endif
 &pwm11 {
 	pinctrl-0 = <&pwm11m1_pins &pwm11m2_pins>;
 };
