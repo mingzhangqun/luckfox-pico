@@ -1,0 +1,209 @@
+diff --git a/android/compat/wordexp.h b/android/compat/wordexp.h
+index 08c59ee..dc29174 100644
+--- a/android/compat/wordexp.h
++++ b/android/compat/wordexp.h
+@@ -11,7 +11,47 @@
+ #ifndef _WORDEXP_H_
+ #define _WORDEXP_H_
+ 
+-#define WRDE_NOCMD 0
++#include <stddef.h>
++#include <stdlib.h>
++#include <string.h>
++#include <ctype.h>
++
++/* POSIX-style flags (subset sufficient for BlueZ usage) */
++#ifndef WRDE_APPEND
++#define WRDE_APPEND   0x01
++#endif
++#ifndef WRDE_DOOFFS
++#define WRDE_DOOFFS   0x02
++#endif
++#ifndef WRDE_NOCMD
++#define WRDE_NOCMD    0x04
++#endif
++#ifndef WRDE_REUSE
++#define WRDE_REUSE    0x08
++#endif
++#ifndef WRDE_SHOWERR
++#define WRDE_SHOWERR  0x10
++#endif
++#ifndef WRDE_UNDEF
++#define WRDE_UNDEF    0x20
++#endif
++
++/* Error return codes */
++#ifndef WRDE_BADCHAR
++#define WRDE_BADCHAR  1
++#endif
++#ifndef WRDE_BADVAL
++#define WRDE_BADVAL   2
++#endif
++#ifndef WRDE_CMDSUB
++#define WRDE_CMDSUB   3
++#endif
++#ifndef WRDE_NOSPACE
++#define WRDE_NOSPACE  4
++#endif
++#ifndef WRDE_SYNTAX
++#define WRDE_SYNTAX   5
++#endif
+ 
+ typedef struct {
+ 	size_t we_wordc;
+@@ -19,13 +59,87 @@ typedef struct {
+ 	size_t we_offs;
+ } wordexp_t;
+ 
+-static inline int wordexp(const char *c, wordexp_t *w, int _i)
++/*
++ * Minimal wordexp/wordfree implementation for environments lacking libc
++ * support. This implementation performs very basic whitespace tokenization
++ * without shell expansions. It is sufficient for BlueZ tools which only
++ * require simple argument splitting and WRDE_APPEND behavior.
++ */
++static inline int wordexp(const char *c, wordexp_t *w, int flags)
+ {
+-	return -1;
++	if (!w)
++		return WRDE_BADVAL;
++
++	/* Initialize when not appending */
++	if (!(flags & WRDE_APPEND) || !w->we_wordv) {
++		w->we_wordc = 0;
++		w->we_wordv = NULL;
++		/* keep we_offs as provided by caller */
++	}
++
++	if (!c || !*c)
++		return 0;
++
++	/* Count tokens */
++	const char *p = c;
++	size_t addc = 0;
++	int in_token = 0;
++	while (*p) {
++		if (isspace((unsigned char)*p)) {
++			in_token = 0;
++		} else if (!in_token) {
++			addc++;
++			in_token = 1;
++		}
++		p++;
++	}
++
++	size_t basec = w->we_wordc;
++	size_t newc = basec + addc;
++	char **v = (char **)realloc(w->we_wordv, (newc ? newc : 1) * sizeof(char *));
++	if (!v && newc)
++		return WRDE_NOSPACE;
++
++	/* Fill tokens */
++	p = c;
++	size_t idx = basec;
++	while (*p) {
++		/* skip leading spaces */
++		while (*p && isspace((unsigned char)*p))
++			p++;
++		if (!*p)
++			break;
++		const char *start = p;
++		while (*p && !isspace((unsigned char)*p))
++			p++;
++		size_t len = (size_t)(p - start);
++		char *s = (char *)malloc(len + 1);
++		if (!s) {
++			/* roll back newly allocated entries */
++			for (size_t j = basec; j < idx; j++)
++				free(v[j]);
++			return WRDE_NOSPACE;
++		}
++		memcpy(s, start, len);
++		s[len] = '\0';
++		v[idx++] = s;
++	}
++
++	w->we_wordv = v;
++	w->we_wordc = newc;
++	return 0;
+ }
+ 
+-static inline void wordfree(wordexp_t *__wordexp)
++static inline void wordfree(wordexp_t *we)
+ {
++	if (!we || !we->we_wordv)
++		return;
++	for (size_t i = 0; i < we->we_wordc; i++)
++		free(we->we_wordv[i]);
++	free(we->we_wordv);
++	we->we_wordv = NULL;
++	we->we_wordc = 0;
++	we->we_offs = 0;
+ }
+ 
+ #endif
+diff --git a/client/main.c b/client/main.c
+index 3f8143d..28470b7 100644
+--- a/client/main.c
++++ b/client/main.c
+@@ -18,7 +18,7 @@
+ #include <unistd.h>
+ #include <stdlib.h>
+ #include <stdbool.h>
+-#include <wordexp.h>
++#include <android/compat/wordexp.h>
+ 
+ #include <glib.h>
+ 
+diff --git a/client/mgmt.c b/client/mgmt.c
+index 602b922..a1f6aed 100644
+--- a/client/mgmt.c
++++ b/client/mgmt.c
+@@ -26,7 +26,7 @@
+ #include <poll.h>
+ #include <getopt.h>
+ #include <stdbool.h>
+-#include <wordexp.h>
++#include <android/compat/wordexp.h>
+ #include <ctype.h>
+ 
+ #include "lib/bluetooth.h"
+diff --git a/client/player.c b/client/player.c
+index eed8d23..8942087 100644
+--- a/client/player.c
++++ b/client/player.c
+@@ -24,7 +24,7 @@
+ #include <string.h>
+ #include <sys/ioctl.h>
+ #include <sys/uio.h>
+-#include <wordexp.h>
++#include <android/compat/wordexp.h>
+ #include <sys/timerfd.h>
+ #include <sys/stat.h>
+ 
+diff --git a/src/shared/shell.c b/src/shared/shell.c
+index a8fa876..f695e70 100644
+--- a/src/shared/shell.c
++++ b/src/shared/shell.c
+@@ -22,7 +22,7 @@
+ #include <stdbool.h>
+ #include <signal.h>
+ #include <sys/signalfd.h>
+-#include <wordexp.h>
++#include <android/compat/wordexp.h>
+ #include <getopt.h>
+ #include <fcntl.h>
+ 
+diff --git a/tools/obexctl.c b/tools/obexctl.c
+index a398b09..d7f16c5 100644
+--- a/tools/obexctl.c
++++ b/tools/obexctl.c
+@@ -20,7 +20,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include <inttypes.h>
+-#include <wordexp.h>
++#include <android/compat/wordexp.h>
+ #include <ctype.h>
+ 
+ #include <glib.h>

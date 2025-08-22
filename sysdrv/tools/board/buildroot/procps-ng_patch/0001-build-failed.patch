@@ -1,0 +1,75 @@
+diff --git a/library/sysinfo.c b/library/sysinfo.c
+index 35a9922..3701e43 100644
+--- a/library/sysinfo.c
++++ b/library/sysinfo.c
+@@ -93,21 +93,29 @@ PROCPS_EXPORT int procps_loadavg(
+         double *restrict av15)
+ {
+     double avg_1=0, avg_5=0, avg_15=0;
+-    locale_t tmplocale;
+     int retval=0;
+     FILE *fp;
+ 
++    /* Always use portable locale fallback */
++    char *old_numeric = NULL;
++
+     if ((fp = fopen(LOADAVG_FILE, "r")) == NULL)
+         return -errno;
+ 
+-    tmplocale = newlocale(LC_NUMERIC_MASK, "C", (locale_t)0);
+-    uselocale(tmplocale);
++    {
++        const char *prev = setlocale(LC_NUMERIC, NULL);
++        if (prev) old_numeric = strdup(prev);
++        setlocale(LC_NUMERIC, "C");
++    }
+     if (fscanf(fp, "%lf %lf %lf", &avg_1, &avg_5, &avg_15) < 3)
+         retval = -ERANGE;
+ 
+     fclose(fp);
+-    uselocale(LC_GLOBAL_LOCALE);
+-    freelocale(tmplocale);
++
++    if (old_numeric) {
++        setlocale(LC_NUMERIC, old_numeric);
++        free(old_numeric);
++    }
+     SET_IF_DESIRED(av1,  avg_1);
+     SET_IF_DESIRED(av5,  avg_5);
+     SET_IF_DESIRED(av15, avg_15);
+diff --git a/library/uptime.c b/library/uptime.c
+index 5c3a3d3..e290118 100644
+--- a/library/uptime.c
++++ b/library/uptime.c
+@@ -129,19 +129,26 @@ PROCPS_EXPORT int procps_uptime(
+         double *restrict idle_secs)
+ {
+     double up=0, idle=0;
+-    locale_t tmplocale;
+     FILE *fp;
+     int rc;
++    /* Always use portable locale fallback */
++    char *old_numeric = NULL;
+ 
+     if ((fp = fopen(UPTIME_FILE, "r")) == NULL)
+         return -errno;
+ 
+-    tmplocale = newlocale(LC_NUMERIC_MASK, "C", (locale_t)0);
+-    uselocale(tmplocale);
++    {
++        const char *prev = setlocale(LC_NUMERIC, NULL);
++        if (prev) old_numeric = strdup(prev);
++        setlocale(LC_NUMERIC, "C");
++    }
+     rc = fscanf(fp, "%lf %lf", &up, &idle);
+     fclose(fp);
+-    uselocale(LC_GLOBAL_LOCALE);
+-    freelocale(tmplocale);
++
++    if (old_numeric) {
++        setlocale(LC_NUMERIC, old_numeric);
++        free(old_numeric);
++    }
+ 
+     if (uptime_secs)
+         *uptime_secs = up;
