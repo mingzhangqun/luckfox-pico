@@ -62,7 +62,7 @@ export RK_PARTITION_FS_TYPE_CFG=rootfs@IGNORE@ext4,userdata@/userdata@ext4,oem@/
 export LF_TARGET_ROOTFS=buildroot
 
 # Buildroot defconfig
-export RK_BUILDROOT_DEFCONFIG=luckfox_pico_w_defconfig
+export RK_BUILDROOT_DEFCONFIG=luckfox_pico_box_defconfig
 
 #################################################
 # 	Defconfig
@@ -84,7 +84,7 @@ export RK_UBOOT_DEFCONFIG=luckfox_rv1106_uboot_defconfig
 export RK_KERNEL_DEFCONFIG=luckfox_rv1106_linux_defconfig
 
 # Kernel defconfig fragment
-export RK_KERNEL_DEFCONFIG_FRAGMENT=rv1106-bt.config
+export RK_KERNEL_DEFCONFIG_FRAGMENT="rv1106-bt.config rv1106-cifs.config"
 
 # Config sensor IQ files
 # RK_CAMERA_SENSOR_IQFILES format:
