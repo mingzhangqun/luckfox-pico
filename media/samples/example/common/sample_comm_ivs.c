@@ -65,7 +65,7 @@ RK_S32 SAMPLE_COMM_IVS_Destroy(RK_S32 s32IvsChnid) {
 	}
 
 #if defined(RV1106)
-	RK_MPI_SYS_WaitFreeMB();
+//	RK_MPI_SYS_WaitFreeMB();
 #endif
 	return s32Ret;
 }
