@@ -14,7 +14,7 @@ export RK_APP_TYPE=RKIPC_RV1106
 export RK_BOOTARGS_CMA_SIZE="66M"
 
 # Kernel dts
-export RK_KERNEL_DTS=rv1106g-luckfox-pico-ultra-w.dts
+export RK_KERNEL_DTS=rv1106g-luckfox-pico-ultra-thermal.dts
 
 #################################################
 #	BOOT_MEDIUM
