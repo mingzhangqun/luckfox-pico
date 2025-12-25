@@ -160,7 +160,8 @@ function choose_target_board() {
 		"RV1106_Luckfox_Pico_86Panel"
 		"RV1106_Luckfox_Pico_86Panel_W"
 		"RV1106_Luckfox_Pico_Zero"
-		"RV1106_Luckfox_Pico_Box")
+		"RV1106_Luckfox_Pico_Box"
+		"RV1106_Luckfox_Pico_Thermal")
 	local LF_BOOT_MEDIA=("SD_CARD" "SPI_NAND" "EMMC")
 	local LF_SYSTEM=("Buildroot" "Custom")
 	local cnt=0 space8="        "
@@ -197,6 +198,8 @@ function choose_target_board() {
 	echo "${space8}${space8}[${LUNCH_NUM}] RV1106_Luckfox_Pico_Zero"
 	LUNCH_NUM=$((LUNCH_NUM + 1))
 	echo "${space8}${space8}[${LUNCH_NUM}] RV1106_Luckfox_Pico_Box"
+	LUNCH_NUM=$((LUNCH_NUM + 1))
+	echo "${space8}${space8}[${LUNCH_NUM}] RV1106_Luckfox_Pico_Thermal"
 	LUNCH_NUM=$((LUNCH_NUM + 1))
 	echo "${space8}${space8}[${LUNCH_NUM}] custom"
 
@@ -282,7 +285,7 @@ function choose_target_board() {
 
 	range_sd_card=(0)
 	range_sd_card_spi_nand=(1 2 3 4)
-	range_emmc=(5 6 7 8 9 10 11 12)
+	range_emmc=(5 6 7 8 9 10 11 12 13)
 
 	if __IS_IN_ARRAY "$HW_INDEX" "${range_sd_card[@]}"; then
 		echo "${space8}${space8}[0] SD_CARD"
